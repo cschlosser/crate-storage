@@ -17,11 +17,17 @@ pushd $1
 
 # Add crates to the index
 for file in $(git --git-dir "$REPO_DIR"/.git --work-tree="$REPO_DIR" diff HEAD~1 --diff-filter=A --name-only); do
+    if [[ $file != *.crate ]];then
+        continue
+    fi
     cargo-index index add --index . --crate "$REPO_DIR/$file" --index-url=$(git remote get-url origin) 
 done
 
 # Remove crates from the index
 for file in $(git --git-dir "$REPO_DIR"/.git --work-tree="$REPO_DIR" diff HEAD~1 --diff-filter=D --name-only); do
+    if [[ $file != *.crate ]];then
+        continue
+    fi
     crate_name=$(sed -nr "s/([A-Za-z_][A-Za-z0-9_\-]*)\-([0-9]\..*)\.crate/\1/p" <<< "$file")
     crate_version=$(sed -nr "s/([A-Za-z_][A-Za-z0-9_\-]*)\-([0-9]\..*)\.crate/\2/p" <<< "$file")
     cargo-index index yank --index . --package "$crate_name" --version "$crate_version"
